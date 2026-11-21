@@ -1,10 +1,11 @@
 import sqlite3
 from PyQt6 import QtWidgets, QtCore
+from PyQt6.QtWidgets import QHeaderView
 from PyQt6.QtCore import QUrl
+from PyQt6.QtGui import QStandardItemModel, QStandardItem
 
 from ui.ui_main import Ui_MainWindow
 from themes import LIGHT_THEME, DARK_THEME, OCEAN_THEME
-# from html_map import HTML_CODE
 from html1 import HTML_CODE
 from dialogs import SignInDialog, AddFishDialog, ProfileDialog
 from config import base_path
@@ -62,6 +63,53 @@ class MainWindow(QtWidgets.QMainWindow, Ui_MainWindow):
         self.widget.loadFinished.connect(self.on_map_loaded)
         self.widget.setHtml(HTML_CODE, baseUrl=QUrl("https://localhost"))
         self.get_rand_location()
+        self.pushButton_3.clicked.connect(self.load_trofic)
+        self.pushButton_4.clicked.connect(self.load_peoples)
+
+    def load_peoples(self):
+        model = QStandardItemModel()
+        model.setHorizontalHeaderLabels(["Имя", "Рыб поймано", "Общий вес"])
+
+        with sqlite3.connect(base_path("projectFish.db")) as con:
+            cur = con.cursor()
+
+            query = """SELECT user_info.login, COUNT(user_fishes.fish) AS total_count, COALESCE(SUM(user_fishes.weight), 0) AS total_weight
+            FROM user_fishes
+            LEFT JOIN user_info ON
+            user_info.user_id = user_fishes.user_id
+            WHERE user_fishes.is_delete = 0
+            GROUP BY user_info.login
+            ORDER BY total_weight DESC, total_count DESC"""
+
+            res = cur.execute(query).fetchall()
+
+            for line in res:
+                items = [QStandardItem(str(field)) for field in line]
+                model.appendRow(items)
+
+            self.tableView_2.setModel(model)
+
+            self.tableView_2.clicked.connect(self.people_row_cliked)
+
+            self.tableView_2.setEditTriggers(
+                QtWidgets.QAbstractItemView.EditTrigger.NoEditTriggers
+            )
+            self.tableView_2.horizontalHeader().setSectionResizeMode(
+                QHeaderView.ResizeMode.Stretch
+            )
+
+    def people_row_cliked(self, index):
+        row = index.row()
+
+        model = self.tableView_2.model()
+
+        user_login = model.item(row, 0).text()
+
+        self._profile_dialog = ProfileDialog(login=user_login, view=1)
+        self._profile_dialog.exec()
+
+    def load_trofic(self):
+        pass
 
     def on_map_loaded(self, success):
         if not success:

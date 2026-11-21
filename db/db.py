@@ -17,8 +17,6 @@ import sqlite3
 with sqlite3.connect("db/projectFish.db") as con:
     cur = con.cursor()
 
-    query = """UPDATE user_fishes
-    SET is_delete = 0
-    WHERE user_fishes.is_delete = 1"""
+    query = """DELETE FROM users WHERE user_id < 9;"""
 
     cur.execute(query).fetchall()

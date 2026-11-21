@@ -177,32 +177,50 @@ class AddFishDialog(QtWidgets.QDialog, Ui_Dialog_User_Add_Fish):
 
 
 class ProfileDialog(QtWidgets.QDialog, Ui_Dialog_Profile):
-    def __init__(self, login, parent=None):
+    def __init__(self, login, view=0, parent=None):
         super().__init__(parent)
         self.setupUi(self)
         self.login = login
+        self.view = view
         self.btn_menu_user.clicked.connect(self.close)
-        self.btn_add_user_fish.setFixedSize(50, 120)
-        self.btn_add_user_fish.setText("+")
-        self.btn_add_user_fish.clicked.connect(self.open_add_fish)
-        self.user_table.setDragEnabled(True)
-        self.user_table.setDragDropMode(QAbstractItemView.DragDropMode.DragOnly)
+        
         self.user_table.setEditTriggers(QAbstractItemView.EditTrigger.NoEditTriggers)
         self.user_table.setSortingEnabled(True)
-        self.user_table.setSelectionBehavior(
-            QAbstractItemView.SelectionBehavior.SelectRows
-        )
-        self.btn_show_best_user.setAcceptDrops(True)
+        self.user_table.setSelectionBehavior(QAbstractItemView.SelectionBehavior.SelectRows)
+        
         self.btn_show_best_user.installEventFilter(self)
-        self.show_info()
-        self.load_table()
-        self.btn_user_delete_fish.setAcceptDrops(True)
         self.btn_user_delete_fish.installEventFilter(self)
         self.btn_user_delete_fish.setText("🗑️")
+
+        if self.view == 1:
+            self.btn_add_user_fish.setVisible(False)
+            self.btn_user_delete_fish.setVisible(False)
+
+            self.user_table.setDragEnabled(False)
+            self.user_table.setDragDropMode(QAbstractItemView.DragDropMode.NoDragDrop)
+
+            self.btn_show_best_user.setAcceptDrops(False)
+            self.btn_user_delete_fish.setAcceptDrops(False)
+        else:
+            self.btn_add_user_fish.setFixedSize(50, 120)
+            self.btn_add_user_fish.setText("+")
+            self.btn_add_user_fish.clicked.connect(self.open_add_fish)
+            
+            self.user_table.setDragEnabled(True)
+            self.user_table.setDragDropMode(QAbstractItemView.DragDropMode.DragOnly)
+            
+            self.btn_show_best_user.setAcceptDrops(True)
+            self.btn_user_delete_fish.setAcceptDrops(True)
+
+        self.show_info()
+        self.load_table()
+
 
     def open_add_fish(self):
         dialog = AddFishDialog(self, login=self.login)
         dialog.exec()
+        self.load_table()
+        self.show_info()
 
     def show_info(self):
         with sqlite3.connect(base_path("projectFish.db")) as con:
@@ -222,13 +240,13 @@ class ProfileDialog(QtWidgets.QDialog, Ui_Dialog_Profile):
 
             query = """SELECT COUNT(user_fishes.fish) FROM user_fishes
             LEFT JOIN users ON users.user_id = user_fishes.user_id
-            WHERE users.user_login = ?"""
+            WHERE users.user_login = ? and user_fishes.is_delete = 0"""
 
             amount = cur.execute(query, (self.login,)).fetchone()
 
             query = """SELECT MAX(user_fishes.weight) FROM user_fishes
             LEFT JOIN users ON users.user_id = user_fishes.user_id
-            WHERE users.user_login = ?"""
+            WHERE users.user_login = ? and user_fishes.is_delete = 0"""
 
             max_weight = cur.execute(query, (self.login,)).fetchone()
 
@@ -265,6 +283,9 @@ class ProfileDialog(QtWidgets.QDialog, Ui_Dialog_Profile):
         )
 
     def eventFilter(self, obj, event):
+        if self.view == 1:
+            return super().eventFilter(obj, event)
+        
         if obj is self.btn_show_best_user:
             if event.type() == QEvent.Type.DragEnter:
                 if event.mimeData().hasText() or event.mimeData().hasFormat(
@@ -343,6 +364,7 @@ class ProfileDialog(QtWidgets.QDialog, Ui_Dialog_Profile):
                         )
 
                 self.load_table()
+                self.show_info()
                 event.acceptProposedAction()
                 return True
 
