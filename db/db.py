@@ -14,9 +14,9 @@ import sqlite3
 
 #     cur.execute(query).fetchall()
 
-with sqlite3.connect("db/projectFish.db") as con:
-    cur = con.cursor()
+# with sqlite3.connect("db/projectFish.db") as con:
+#     cur = con.cursor()
 
-    query = """DELETE FROM users WHERE user_id < 9;"""
+#     query = """DELETE FROM user_fishes WHERE user_id >= 9;"""
 
-    cur.execute(query).fetchall()
+#     cur.execute(query).fetchall()

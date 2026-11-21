@@ -63,8 +63,8 @@ class MainWindow(QtWidgets.QMainWindow, Ui_MainWindow):
         self.widget.loadFinished.connect(self.on_map_loaded)
         self.widget.setHtml(HTML_CODE, baseUrl=QUrl("https://localhost"))
         self.get_rand_location()
-        self.pushButton_3.clicked.connect(self.load_trofic)
-        self.pushButton_4.clicked.connect(self.load_peoples)
+        self.pushButton_4.clicked.connect(self.load_trofic)
+        self.pushButton_3.clicked.connect(self.load_peoples)
 
     def load_peoples(self):
         model = QStandardItemModel()
@@ -109,7 +109,46 @@ class MainWindow(QtWidgets.QMainWindow, Ui_MainWindow):
         self._profile_dialog.exec()
 
     def load_trofic(self):
-        pass
+        model = QStandardItemModel()
+        model.setHorizontalHeaderLabels(["Имя", "Вид рыбы", "Вес", "Воблер"])
+
+        with sqlite3.connect(base_path("projectFish.db")) as con:
+            cur = con.cursor()
+
+            query = """
+                SELECT 
+                    u.login, 
+                    f.fish, 
+                    f.weight, 
+                    f.wobbler
+                FROM user_fishes f
+                JOIN user_info u ON u.user_id = f.user_id
+                JOIN (
+                    SELECT user_id, MAX(weight) as max_weight
+                    FROM user_fishes
+                    WHERE is_delete = 0
+                    GROUP BY user_id
+                ) max_catch ON f.user_id = max_catch.user_id AND f.weight = max_catch.max_weight
+                WHERE f.is_delete = 0
+                ORDER BY f.weight DESC
+            """
+
+            res = cur.execute(query).fetchall()
+
+            for line in res:
+                items = [QStandardItem(str(field)) for field in line]
+                model.appendRow(items)
+
+        self.tableView.setModel(model)
+
+        self.tableView.clicked.connect(self.people_row_cliked)
+
+        self.tableView.setEditTriggers(
+            QtWidgets.QAbstractItemView.EditTrigger.NoEditTriggers
+        )
+        self.tableView.horizontalHeader().setSectionResizeMode(
+            QHeaderView.ResizeMode.Stretch
+        )
 
     def on_map_loaded(self, success):
         if not success:

@@ -145,6 +145,7 @@ class AddFishDialog(QtWidgets.QDialog, Ui_Dialog_User_Add_Fish):
         fish_name = self.line_fish_name_add.text().strip()
         location = self.line_location_ip.text().strip()
         fish_weight = self.fish_weight.text().strip()
+        wobbler = self.box_combo_vobler.currentText()
 
         if not bool(re.match(r"^\d+\.\d+$", fish_weight)):
             QtWidgets.QMessageBox.warning(
@@ -160,7 +161,7 @@ class AddFishDialog(QtWidgets.QDialog, Ui_Dialog_User_Add_Fish):
         with sqlite3.connect(base_path("projectFish.db")) as con:
             cur = con.cursor()
 
-            query = """INSERT INTO user_fishes (user_id, location, fish, weight) VALUES (?, ?, ?, ?);"""
+            query = """INSERT INTO user_fishes (user_id, location, fish, weight, wobbler) VALUES (?, ?, ?, ?, ?);"""
 
             user_id = get_user_id(self.login)
 
@@ -171,6 +172,7 @@ class AddFishDialog(QtWidgets.QDialog, Ui_Dialog_User_Add_Fish):
                     location,
                     fish_name,
                     fish_weight,
+                    wobbler,
                 ),
             ).fetchall()
             self.accept()
