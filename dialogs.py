@@ -13,6 +13,7 @@ from ui.ui_dialogs import (
     Ui_Dialog_Profile,
     Ui_Dialog_Registration,
     Ui_Dialog_Reset_Password,
+    Ui_Dialog_Hotkeys,
 )
 from config import resource_path, base_path
 from security import (
@@ -21,6 +22,16 @@ from security import (
     check_user_registration,
     get_user_id,
 )
+
+
+class Hotkeys(QtWidgets.QDialog, Ui_Dialog_Hotkeys):
+    def __init__(self, /, parent):
+        super().__init__(parent)
+        self.setupUi(self)
+
+    def keyPressEvent(self, event):
+        if event.key() == Qt.Key.Key_Escape:
+            self.close()
 
 
 class SignInDialog(QtWidgets.QDialog, Ui_Dialog_Sign):
@@ -195,11 +206,13 @@ class ProfileDialog(QtWidgets.QDialog, Ui_Dialog_Profile):
         self.login = login
         self.view = view
         self.btn_menu_user.clicked.connect(self.close)
-        
+
         self.user_table.setEditTriggers(QAbstractItemView.EditTrigger.NoEditTriggers)
         self.user_table.setSortingEnabled(True)
-        self.user_table.setSelectionBehavior(QAbstractItemView.SelectionBehavior.SelectRows)
-        
+        self.user_table.setSelectionBehavior(
+            QAbstractItemView.SelectionBehavior.SelectRows
+        )
+
         self.btn_show_best_user.installEventFilter(self)
         self.btn_user_delete_fish.installEventFilter(self)
         self.btn_user_delete_fish.setText("🗑️")
@@ -217,10 +230,10 @@ class ProfileDialog(QtWidgets.QDialog, Ui_Dialog_Profile):
             self.btn_add_user_fish.setFixedSize(50, 120)
             self.btn_add_user_fish.setText("+")
             self.btn_add_user_fish.clicked.connect(self.open_add_fish)
-            
+
             self.user_table.setDragEnabled(True)
             self.user_table.setDragDropMode(QAbstractItemView.DragDropMode.DragOnly)
-            
+
             self.btn_show_best_user.setAcceptDrops(True)
             self.btn_show_best_user.clicked.connect(self.reset_show)
             self.btn_user_delete_fish.setAcceptDrops(True)
@@ -250,7 +263,14 @@ class ProfileDialog(QtWidgets.QDialog, Ui_Dialog_Profile):
                          AND user_fishes.fish = ? 
                          AND user_fishes.weight = ?"""
 
-            res = cur.execute(query, (self.login, fish, weight,)).fetchone()[0]
+            res = cur.execute(
+                query,
+                (
+                    self.login,
+                    fish,
+                    weight,
+                ),
+            ).fetchone()[0]
 
             if view == 0:
                 if res == 0:
@@ -295,7 +315,7 @@ class ProfileDialog(QtWidgets.QDialog, Ui_Dialog_Profile):
                 self.load_table()
                 self.show_info()
         if event.key() == Qt.Key.Key_Plus:
-           self.open_add_fish()
+            self.open_add_fish()
 
     def open_add_fish(self):
         dialog = AddFishDialog(self, login=self.login)
@@ -366,7 +386,7 @@ class ProfileDialog(QtWidgets.QDialog, Ui_Dialog_Profile):
     def eventFilter(self, obj, event):
         if self.view == 1:
             return super().eventFilter(obj, event)
-        
+
         if obj is self.btn_show_best_user:
             if event.type() == QEvent.Type.DragEnter:
                 if event.mimeData().hasText() or event.mimeData().hasFormat(

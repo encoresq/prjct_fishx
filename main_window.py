@@ -1,13 +1,13 @@
 import sqlite3
 from PyQt6 import QtWidgets, QtCore
 from PyQt6.QtWidgets import QHeaderView
-from PyQt6.QtCore import QUrl
+from PyQt6.QtCore import QUrl, Qt
 from PyQt6.QtGui import QStandardItemModel, QStandardItem
 
 from ui.ui_main import Ui_MainWindow
 from themes import LIGHT_THEME, DARK_THEME, OCEAN_THEME
 from html1 import HTML_CODE
-from dialogs import SignInDialog, AddFishDialog, ProfileDialog
+from dialogs import Hotkeys, AddFishDialog, ProfileDialog
 from config import base_path
 
 
@@ -65,7 +65,13 @@ class MainWindow(QtWidgets.QMainWindow, Ui_MainWindow):
         self.get_rand_location()
         self.load_peoples()
         self.load_trofic()
-        
+
+    def keyPressEvent(self, event):
+        if event.key() == Qt.Key.Key_F1:
+            self._hot = Hotkeys(self)
+            self._hot.exec()
+        if event.key() == Qt.Key.Key_Escape:
+            self.close()
 
     def load_peoples(self):
         model = QStandardItemModel()
