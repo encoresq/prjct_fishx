@@ -63,8 +63,9 @@ class MainWindow(QtWidgets.QMainWindow, Ui_MainWindow):
         self.widget.loadFinished.connect(self.on_map_loaded)
         self.widget.setHtml(HTML_CODE, baseUrl=QUrl("https://localhost"))
         self.get_rand_location()
-        self.pushButton_4.clicked.connect(self.load_trofic)
-        self.pushButton_3.clicked.connect(self.load_peoples)
+        self.load_peoples()
+        self.load_trofic()
+        
 
     def load_peoples(self):
         model = QStandardItemModel()
@@ -191,10 +192,6 @@ class MainWindow(QtWidgets.QMainWindow, Ui_MainWindow):
             action.setCheckable(True)
             action.setChecked(key == theme_key)
         self.theme_settings.setValue("theme", theme_key)
-
-    def open_sign_in(self):
-        self._sign_in_dialog = SignInDialog(self)
-        self._sign_in_dialog.exec()
 
     def open_profile(self):
         self._profile_dialog = ProfileDialog(login=self.login)

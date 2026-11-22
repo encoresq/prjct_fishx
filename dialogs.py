@@ -43,6 +43,12 @@ class SignInDialog(QtWidgets.QDialog, Ui_Dialog_Sign):
 
         self.btn_create_account.clicked.connect(self.open_registration)
 
+    def keyPressEvent(self, event):
+        if event.key() == Qt.Key.Key_Return:
+            self.sign()
+        if event.key() == Qt.Key.Key_Escape:
+            self.close()
+
     def open_registration(self):
         self._register_dialog = UserRegistration(self)
         self._register_dialog.exec()
@@ -141,6 +147,10 @@ class AddFishDialog(QtWidgets.QDialog, Ui_Dialog_User_Add_Fish):
         self.btn_close_add.clicked.connect(self.reject)
         self.btn_add.clicked.connect(self.add_fish)
 
+    def keyPressEvent(self, event):
+        if event.key() == Qt.Key.Key_Return:
+            self.add_fish()
+
     def add_fish(self):
         fish_name = self.line_fish_name_add.text().strip()
         location = self.line_location_ip.text().strip()
@@ -212,11 +222,80 @@ class ProfileDialog(QtWidgets.QDialog, Ui_Dialog_Profile):
             self.user_table.setDragDropMode(QAbstractItemView.DragDropMode.DragOnly)
             
             self.btn_show_best_user.setAcceptDrops(True)
+            self.btn_show_best_user.clicked.connect(self.reset_show)
             self.btn_user_delete_fish.setAcceptDrops(True)
+            self.valid_info()
 
         self.show_info()
         self.load_table()
+        self.valid_info(view=self.view)
 
+    def reset_show(self):
+        pass
+
+    def valid_info(self, view=0):
+        try:
+            _fish, _weight = self.btn_show_best_user.text().split("|")
+            fish, weight = _fish.split()[-1], _weight.split()[-1]
+        except:
+            return
+        with sqlite3.connect(base_path("projectFish.db")) as con:
+            cur = con.cursor()
+
+            query = """SELECT COUNT(user_fishes.fish)
+                       FROM user_fishes
+                       LEFT JOIN user_info ON user_info.user_id = user_fishes.user_id
+                       WHERE user_info.login = ? 
+                         AND user_fishes.is_delete = 0 
+                         AND user_fishes.fish = ? 
+                         AND user_fishes.weight = ?"""
+
+            res = cur.execute(query, (self.login, fish, weight,)).fetchone()[0]
+
+            if view == 0:
+                if res == 0:
+                    self.btn_show_best_user.setText("Выберите улов на показ")
+                    query = """UPDATE user_info 
+                            SET selected_fish = NULL, selected_fish_weight = NULL
+                            WHERE login = ?;"""
+                    cur.execute(query, (self.login,))
+            if view == 1:
+                if res == 0:
+                    self.btn_show_best_user.setText("Пользователь не выбрал улов")
+
+    def keyPressEvent(self, event):
+        if event.key() == Qt.Key.Key_Delete:
+            cur_idx = self.user_table.currentIndex()
+            if cur_idx.isValid():
+                row = cur_idx.row()
+                model = self.user_table.model()
+                fish_data = str(model.index(row, 1).data())
+                weight_data = str(model.index(row, 2).data())
+                with sqlite3.connect(base_path("projectFish.db")) as con:
+                    cur = con.cursor()
+                    query = """
+                    UPDATE user_fishes
+                    SET is_delete = 1
+                    WHERE rowid = (
+                        SELECT rowid 
+                        FROM user_fishes 
+                        WHERE user_id = ? AND fish = ? AND weight = ? AND is_delete = 0
+                        LIMIT 1
+                    )
+                    """
+                    cur.execute(
+                        query,
+                        (
+                            get_user_id(self.login),
+                            fish_data,
+                            weight_data,
+                        ),
+                    )
+
+                self.load_table()
+                self.show_info()
+        if event.key() == Qt.Key.Key_Plus:
+           self.open_add_fish()
 
     def open_add_fish(self):
         dialog = AddFishDialog(self, login=self.login)
@@ -367,6 +446,7 @@ class ProfileDialog(QtWidgets.QDialog, Ui_Dialog_Profile):
 
                 self.load_table()
                 self.show_info()
+                self.valid_info()
                 event.acceptProposedAction()
                 return True
 
@@ -410,7 +490,6 @@ class UserRegistration(QtWidgets.QDialog, Ui_Dialog_Registration):
 
         self._sign_dialog = SignInDialog()
 
-    # выбор авы
     def select_photo(self):
         self.photo_path, _ = QFileDialog.getOpenFileName(
             self, "Выберите фото", "", "Изображения (*.png *.jpg *.jpeg)"
