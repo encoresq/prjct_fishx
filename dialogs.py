@@ -355,6 +355,7 @@ class ProfileDialog(QtWidgets.QDialog, Ui_Dialog_Profile):
                 f"Всего рыб поймано - {amount[0]}  |  Максимальный вес рыбы - {max_weight[0]}"
             )
 
+        photo_path = base_path(res[2])
         self.user_photo.setPixmap(QtGui.QPixmap(photo_path))
         self.user_name.setText(name)
 
@@ -559,7 +560,9 @@ class UserRegistration(QtWidgets.QDialog, Ui_Dialog_Registration):
             return
 
         unique_file = f"{uuid.uuid4().hex}.png"
-        full_path = os.path.join("avatars", unique_file)
+        avatars_dir = base_path("avatars") 
+        os.makedirs(avatars_dir, exist_ok=True) 
+        full_path = os.path.join(avatars_dir, unique_file)
 
         new_user_id = user_registration(login, password)
 
