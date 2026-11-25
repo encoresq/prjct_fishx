@@ -314,6 +314,7 @@ class ProfileDialog(QtWidgets.QDialog, Ui_Dialog_Profile):
 
                 self.load_table()
                 self.show_info()
+                self.valid_info()
         if event.key() == Qt.Key.Key_Plus:
             self.open_add_fish()
 
