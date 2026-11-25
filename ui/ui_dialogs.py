@@ -231,7 +231,7 @@ class Ui_Dialog_Profile(object):
         Dialog.setWindowTitle(_translate("Dialog", "Dialog"))
         self.btn_menu_user.setText(_translate("Dialog", "меню"))
         self.user_name.setText(_translate("Dialog", "empty"))
-        self.btn_show_best_user.setText(_translate("Dialog", "выбрать улов"))
+        self.btn_show_best_user.setText(_translate("Dialog", "улов не выбран"))
         self.user_stats.setText(_translate("Dialog", "empty"))
         self.btn_add_user_fish.setText(_translate("Dialog", "+"))
         self.btn_user_delete_fish.setText(_translate("Dialog", "-"))

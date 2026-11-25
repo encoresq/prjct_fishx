@@ -1,6 +1,8 @@
 .env
 ProjectFish
 avatars
+logo.ico
+*.rar
 
 # Byte-compiled / optimized / DLL files
 __pycache__/

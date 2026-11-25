@@ -237,7 +237,7 @@ class ProfileDialog(QtWidgets.QDialog, Ui_Dialog_Profile):
             self.btn_show_best_user.setAcceptDrops(True)
             self.btn_show_best_user.clicked.connect(self.reset_show)
             self.btn_user_delete_fish.setAcceptDrops(True)
-            self.valid_info()
+            # self.valid_info()
 
         self.show_info()
         self.load_table()
@@ -314,7 +314,7 @@ class ProfileDialog(QtWidgets.QDialog, Ui_Dialog_Profile):
 
                 self.load_table()
                 self.show_info()
-                self.valid_info()
+                self.valid_info(view=self.view)
         if event.key() == Qt.Key.Key_Plus:
             self.open_add_fish()
 
@@ -565,6 +565,8 @@ class UserRegistration(QtWidgets.QDialog, Ui_Dialog_Registration):
         os.makedirs(avatars_dir, exist_ok=True) 
         full_path = os.path.join(avatars_dir, unique_file)
 
+        db_avatar_path = os.path.join("avatars", unique_file)
+
         new_user_id = user_registration(login, password)
 
         if not new_user_id:
@@ -583,7 +585,7 @@ class UserRegistration(QtWidgets.QDialog, Ui_Dialog_Registration):
                                 VALUES (?, ?, ?, ?, ?)"""
 
                 cur.execute(
-                    query_info, (new_user_id, login, first_name, second_name, full_path)
+                    query_info, (new_user_id, login, first_name, second_name, db_avatar_path)
                 )
                 con.commit()
 
